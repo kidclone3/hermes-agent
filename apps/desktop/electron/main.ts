@@ -331,6 +331,13 @@ import { fetchMarketplaceThemes, searchMarketplaceThemes } from './vscode-market
 import { createWakeIndicatorWindowController } from './wake-indicator-window'
 import { readWindowBelow } from './window-below'
 import { installWindowRendererLifecycle } from './window-renderer-lifecycle'
+import {
+  createAppCloseBarrier,
+  createRendererCloseCoordinator,
+  installWindowCloseBarrier,
+  RENDERER_CLOSE_RESULT_CHANNEL,
+  type RendererCloseWindow
+} from './window-close-barrier'
 import { createWindowRevealController } from './window-reveal'
 import {
   bindGeometryPersistence,
@@ -10639,6 +10646,57 @@ function wireWindowReveal(win, { show, onRevealed }: { show?: () => void; onReve
 
   return controller
 }
+// BrowserWindow's `close` event is synchronous, but live renderer work (such
+// as a debounced drawing save) is not. Track only full app renderers: helper
+// windows never mount panes and deliberately do not participate.
+const rendererCloseWindows = new Set<RendererCloseWindow>()
+const rendererCloseDisposers = new WeakMap<RendererCloseWindow, () => void>()
+const rendererCloseCoordinator = createRendererCloseCoordinator({
+  onFailure: ({ reason, window }) => {
+    rememberLog(`[close-barrier] blocked close for renderer ${window.webContents.id}: ${reason}`)
+  }
+})
+const rendererAppCloseBarrier = createAppCloseBarrier({
+  onFailure: () => {
+    rememberLog('[close-barrier] blocked app quit because renderer flush coordination failed')
+  },
+  requestFlush: flushLiveRendererCloseBarriers,
+  retryClose: () => app.quit()
+})
+
+ipcMain.on(RENDERER_CLOSE_RESULT_CHANNEL, (event, payload) => {
+  rendererCloseCoordinator.resolve(event.sender.id, payload)
+})
+
+function detachRendererCloseBarrier(win): void {
+  const rendererWindow = win as RendererCloseWindow
+  rendererCloseWindows.delete(rendererWindow)
+  rendererCloseDisposers.get(rendererWindow)?.()
+  rendererCloseDisposers.delete(rendererWindow)
+}
+
+function attachRendererCloseBarrier(win): void {
+  const rendererWindow = win as RendererCloseWindow
+  rendererCloseWindows.add(rendererWindow)
+  const dispose = installWindowCloseBarrier(rendererWindow, {
+    isTeardownPermitted: rendererAppCloseBarrier.isPermitted,
+    onFailure: () => {
+      rememberLog(`[close-barrier] could not resume close for renderer ${rendererWindow.webContents.id}`)
+    },
+    requestFlush: () => rendererCloseCoordinator.request(rendererWindow)
+  })
+  rendererCloseDisposers.set(rendererWindow, dispose)
+
+  win.once('closed', () => detachRendererCloseBarrier(win))
+}
+
+function flushLiveRendererCloseBarriers(): Promise<boolean> {
+  const windows = [...rendererCloseWindows]
+
+  return Promise.all(windows.map(window => rendererCloseCoordinator.request(window))).then(results =>
+    results.every(Boolean)
+  )
+}
 
 // Secondary "session windows" — one extra OS window per chat so a user can
 // work with multiple chats side by side. The registry guarantees one window
@@ -10694,6 +10752,7 @@ function spawnSecondaryWindow({ sessionId, watch }: { sessionId?: string; watch?
   if (IS_MAC) {
     win.setWindowButtonPosition?.(WINDOW_BUTTON_POSITION)
   }
+  attachRendererCloseBarrier(win)
 
   wireWindowReveal(win)
 
@@ -10791,6 +10850,7 @@ function createInstanceWindow() {
   if (IS_MAC) {
     win.setWindowButtonPosition?.(WINDOW_BUTTON_POSITION)
   }
+  attachRendererCloseBarrier(win)
 
   wireWindowReveal(win)
 
@@ -11265,6 +11325,7 @@ function spawnHudWindow(sessionId, profile) {
 
   win.setAlwaysOnTop(true, IS_MAC ? 'floating' : 'screen-saver')
   win.setHiddenInMissionControl?.(true)
+  attachRendererCloseBarrier(win)
 
   try {
     win.setVisibleOnAllWorkspaces(
@@ -11350,6 +11411,7 @@ function openHudWindow(sessionId, profile) {
     if (profileKey && hudProfile !== profileKey) {
       const win = hudWindow
       hudWindow = null
+      detachRendererCloseBarrier(win)
       win.removeAllListeners('closed')
       win.destroy()
 
@@ -11396,6 +11458,7 @@ function closeHudWindow() {
 
   if (win && !win.isDestroyed()) {
     // Null'd first so the 'closed' handler doesn't broadcast a second time.
+    detachRendererCloseBarrier(win)
     win.removeAllListeners('closed')
     win.close()
   }
@@ -11654,6 +11717,7 @@ function createWindow() {
   })
 
   const createdMainWindow = mainWindow
+  attachRendererCloseBarrier(createdMainWindow)
 
   // Chat-surface registration: see applyWindowTranslucency.
   translucencyBackedWindows.add(mainWindow)
@@ -15227,6 +15291,13 @@ app.on('before-quit', event => {
   // Runs ahead of every teardown below, so "Keep Running" leaves the app
   // exactly as it was.
   if (heldQuitForActiveWork(event)) {
+    rendererAppCloseBarrier.rearm()
+    return
+  }
+  // The active-work confirmation deliberately stays first. Once the user has
+  // chosen to quit, every full renderer must settle its close-sensitive work
+  // before any teardown below can destroy its panes.
+  if (rendererAppCloseBarrier.hold(event)) {
     return
   }
 
@@ -15239,6 +15310,7 @@ app.on('before-quit', event => {
   }
 
   if ((sshConnections.size > 0 || sshBootstrapCoordinator.promises().length > 0) && !sshQuitTeardownDone) {
+    rendererAppCloseBarrier.rearm()
     event.preventDefault()
     sshBootstrapCoordinator.cancelAll()
     const scopes = [...sshConnections.keys()]
@@ -15279,6 +15351,7 @@ app.on('before-quit', event => {
   hudSnapShortcut.dispose()
 
   if (hudWindow && !hudWindow.isDestroyed()) {
+    detachRendererCloseBarrier(hudWindow)
     hudWindow.removeAllListeners('closed')
     hudWindow.destroy()
   }
