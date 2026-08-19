@@ -38,6 +38,7 @@ function parseDrawing(text: string): Omit<LoadedDrawing, 'fingerprint' | 'identi
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('Invalid Excalidraw document')
   }
+
   const envelope = parsed as Record<string, unknown>
 
   if (envelope.type !== 'excalidraw' || envelope.version !== 2 || !Array.isArray(envelope.elements)) {
@@ -57,6 +58,7 @@ function parseDrawing(text: string): Omit<LoadedDrawing, 'fingerprint' | 'identi
   ) {
     throw new Error('Invalid Excalidraw document')
   }
+
   const editorAppState = { ...(appState as Record<string, unknown>) }
   delete editorAppState.collaborators
 
@@ -162,6 +164,7 @@ export class DrawingController {
           status: 'error'
         }
       }
+
       this.emit('external')
     }
   }
@@ -180,6 +183,7 @@ export class DrawingController {
     if (!selection) {
       return null
     }
+
     const path = remote ? `${selection.replace(/\/$/, '')}/${this.state.identity.path.split('/').at(-1)}` : selection
     const identity = { ...this.state.identity, path }
     await writeDesktopDrawingFileText(identity, this.serialize(), undefined)
@@ -213,6 +217,7 @@ export class DrawingController {
     if (!this.pending || this.externalConflict) {
       return
     }
+
     this.pending = false
     const inFlight = this.save()
     this.inFlight = inFlight

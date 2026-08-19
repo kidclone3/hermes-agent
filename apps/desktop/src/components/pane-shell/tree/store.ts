@@ -34,11 +34,11 @@ import {
   normalize,
   removePane,
   reorderPanesInGroup as reorderPanesInGroupOp,
+  type RootEdge,
   setActivePane as setActivePaneOp,
   setGroupHeaderHidden as setGroupHeaderHiddenOp,
   setGroupMinimized,
   setSplitWeights as setSplitWeightsOp,
-  type RootEdge,
   type SplitNode
 } from './model'
 import { FLOATING_PLACEMENT } from './renderer/floating-rect'
@@ -1244,8 +1244,10 @@ function adoptContributedPanes(): void {
 
     if (dock && 'root' in dock) {
       next = insertAtRootEdge(next, pane.id, dock.root)
+
       continue
     }
+
     const placement = placementOf(pane.id) ?? 'right'
 
     const anchor =

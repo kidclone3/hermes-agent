@@ -91,6 +91,7 @@ describe('Excalidraw drawing panes', () => {
       waitForSave: vi.fn().mockResolvedValue(undefined),
       canCloseCleanly: vi.fn().mockReturnValue(true)
     }
+
     openDrawing(identity, 'fp1')
     setDrawingController(identity, controller)
     const paneId = excalidrawPaneId(identity)

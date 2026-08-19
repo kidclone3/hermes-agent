@@ -72,6 +72,7 @@ function registerDrawingPane(identity: ExcalidrawDocumentIdentity) {
 
   const paneId = excalidrawPaneId(identity)
   const anchorPaneId = registered.values().next().value?.paneId
+
   const dispose = registry.register({
     area: PANES_AREA,
     data: {
@@ -84,6 +85,7 @@ function registerDrawingPane(identity: ExcalidrawDocumentIdentity) {
     render: () => createElement(ExcalidrawPane, { identity }),
     title: drawingName(identity.path)
   })
+
   registered.set(key, { dispose, paneId })
   registerPaneCloser(paneId, () => void requestDrawingClose(identity))
 }
@@ -114,6 +116,7 @@ export async function handleChangedDocument(identity: ExcalidrawDocumentIdentity
 
 export async function requestDrawingClose(identity: ExcalidrawDocumentIdentity, confirmDiscard: () => boolean | Promise<boolean> = () => false): Promise<boolean> {
   const controller = controllers.get(excalidrawDocumentKey(identity))
+
   if (!controller) {
     closeDrawing(identity)
 

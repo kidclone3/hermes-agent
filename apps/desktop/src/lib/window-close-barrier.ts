@@ -21,6 +21,7 @@ export function createWindowCloseBarrier(bridge: WindowCloseBridge) {
 
   const requestFlush = async (requestId: string): Promise<void> => {
     const current = [...registrations]
+
     const results = await Promise.all(
       current.map(async registration => {
         let flush: Promise<boolean>

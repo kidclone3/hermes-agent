@@ -75,8 +75,10 @@ export function installFocusedDrawingBridge(): () => void {
       if (disposed || requestGeneration !== generation) {
         return
       }
+
       if (!session) {
         lastSession = null
+
         return
       }
 
@@ -99,12 +101,14 @@ export function installFocusedDrawingBridge(): () => void {
     if (disposed) {
       return
     }
+
     disposed = true
     generation += 1
     off.forEach(stop => stop())
 
     const previousSession = lastSession
     lastSession = null
+
     if (previousSession) {
       void publish(previousSession, [])
     }

@@ -9,6 +9,7 @@ const bridge = vi.hoisted(() => {
       get: () => value,
       listen: (listener: () => void) => {
         listeners.add(listener)
+
         return () => listeners.delete(listener)
       },
       set: (next: T) => {
@@ -190,9 +191,11 @@ describe('focused Excalidraw drawing bridge', () => {
   it('does not let an old request completion clear session B focus', async () => {
     let resolveSessionAFocus!: () => void
     let resolveSessionAClear!: () => void
+
     const sessionAFocus = new Promise<void>(resolve => {
       resolveSessionAFocus = resolve
     })
+
     const sessionAClear = new Promise<void>(resolve => {
       resolveSessionAClear = resolve
     })

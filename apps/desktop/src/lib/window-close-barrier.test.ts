@@ -6,6 +6,7 @@ import { createWindowCloseBarrier } from './window-close-barrier'
 
 function deferred<T>() {
   let resolve!: (value: T) => void
+
   const promise = new Promise<T>(done => {
     resolve = done
   })
@@ -16,6 +17,7 @@ function deferred<T>() {
 test('waits for a pending controller debounce flush before answering a close request', async () => {
   let onRequest: ((requestId: string) => void) | undefined
   const responses: Array<{ allowed: boolean; requestId: string }> = []
+
   const barrier = createWindowCloseBarrier({
     onRequest: listener => {
       onRequest = listener
@@ -26,6 +28,7 @@ test('waits for a pending controller debounce flush before answering a close req
     },
     resolve: (requestId, allowed) => responses.push({ allowed, requestId })
   })
+
   const save = deferred<boolean>()
 
   barrier.register(() => save.promise)
@@ -42,6 +45,7 @@ test('waits for a pending controller debounce flush before answering a close req
 test('vetoes a close request when any registered controller reports a conflict', async () => {
   let onRequest: ((requestId: string) => void) | undefined
   const responses: Array<{ allowed: boolean; requestId: string }> = []
+
   const barrier = createWindowCloseBarrier({
     onRequest: listener => {
       onRequest = listener
@@ -61,6 +65,7 @@ test('vetoes a close request when any registered controller reports a conflict',
 test('answers immediately when the window has no live controllers', async () => {
   let onRequest: ((requestId: string) => void) | undefined
   const responses: Array<{ allowed: boolean; requestId: string }> = []
+
   const barrier = createWindowCloseBarrier({
     onRequest: listener => {
       onRequest = listener
@@ -79,6 +84,7 @@ test('answers immediately when the window has no live controllers', async () => 
 test('keeps an unregistering controller in the in-flight close request until its flush settles', async () => {
   let onRequest: ((requestId: string) => void) | undefined
   const responses: Array<{ allowed: boolean; requestId: string }> = []
+
   const barrier = createWindowCloseBarrier({
     onRequest: listener => {
       onRequest = listener
@@ -87,6 +93,7 @@ test('keeps an unregistering controller in the in-flight close request until its
     },
     resolve: (requestId, allowed) => responses.push({ allowed, requestId })
   })
+
   const save = deferred<boolean>()
   const unregister = barrier.register(() => save.promise)
 

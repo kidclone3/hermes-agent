@@ -84,9 +84,11 @@ export function createRendererCloseCoordinator(options: RendererCloseCoordinator
 
       const requestId = nextRequestId()
       let resolve!: (allowed: boolean) => void
+
       const promise = new Promise<boolean>(done => {
         resolve = done
       })
+
       const pending: PendingRendererClose = {
         promise,
         requestId,
@@ -94,6 +96,7 @@ export function createRendererCloseCoordinator(options: RendererCloseCoordinator
         timeout: undefined,
         window
       }
+
       pending.timeout = scheduleTimeout(() => settle(pending, false, 'unresponsive'), timeoutMs)
       pendingByWebContents.set(window.webContents.id, pending)
 

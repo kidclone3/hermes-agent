@@ -248,6 +248,7 @@ async function openSecondary(entry: Secondary): Promise<void> {
 
   if (entry.connectPromise) {
     await entry.connectPromise
+
     return
   }
 

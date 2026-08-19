@@ -24,10 +24,9 @@ import { HapticsProvider } from './components/haptics-provider'
 import { RootTooltipProvider } from './components/ui/tooltip'
 import { I18nProvider } from './i18n'
 import { installClipboardShim } from './lib/clipboard'
-import { installWindowCloseBarrier } from './lib/window-close-barrier'
-
 import { queryClient } from './lib/query-client'
 import { installRendererAnimationPauseState } from './lib/renderer-loop-pause'
+import { installWindowCloseBarrier } from './lib/window-close-barrier'
 import { ThemeProvider } from './themes/context'
 
 installClipboardShim()

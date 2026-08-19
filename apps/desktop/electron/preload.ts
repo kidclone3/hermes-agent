@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
           callback(payload.requestId)
         }
       }
+
       ipcRenderer.on('hermes:window:close-barrier:request', listener)
 
       return () => ipcRenderer.removeListener('hermes:window:close-barrier:request', listener)

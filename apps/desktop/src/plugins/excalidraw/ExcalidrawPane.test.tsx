@@ -128,6 +128,7 @@ describe('ExcalidrawPane', () => {
   })
   it('remounts an external replacement once with same-ID files and accepts the next edit', async () => {
     let listener: ((origin: 'editor' | 'external') => void) | undefined
+
     let state = {
       status: 'ready' as const,
       identity,
@@ -135,6 +136,7 @@ describe('ExcalidrawPane', () => {
       appState: { theme: 'dark' },
       files: { image: { id: 'same', dataURL: 'old' } }
     }
+
     subscribe.mockImplementation((callback: (origin: 'editor' | 'external') => void) => {
       listener = callback
 

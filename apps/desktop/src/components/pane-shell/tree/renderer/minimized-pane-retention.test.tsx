@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { useEffect, useState } from 'react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { usePaneVisible } from '@/components/pane-shell/pane-visibility'
@@ -93,6 +93,7 @@ describe('minimized TreeGroup content retention', () => {
 
       return tree
     }
+
     const rendered = render(<TreeGroup node={node()} parentAxis="row" railSide="right" />)
     fireEvent.click(screen.getByTestId('drawing'))
     expect(screen.getByTestId('drawing').textContent).toBe('pending')

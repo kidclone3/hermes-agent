@@ -7,6 +7,7 @@ const first: ExcalidrawDocumentIdentity = {
   profile: 'default',
   runtime: 'local'
 }
+
 const second: ExcalidrawDocumentIdentity = { ...first, path: '/drawings/flow.excalidraw' }
 
 describe('Excalidraw pane layout integration', () => {
@@ -77,7 +78,8 @@ describe('Excalidraw pane layout integration', () => {
 
     const opened = tree.$layoutTree.get()!
     expect(opened).toMatchObject({ id: 'spl-root', orientation: 'row', type: 'split' })
-    if (opened.type !== 'split') throw new Error('expected root drawing split')
+
+    if (opened.type !== 'split') {throw new Error('expected root drawing split')}
     const drawingIndex = opened.children.findIndex(child => model.allPaneIds(child).includes(firstPaneId))
     const drawingWeight = opened.weights[drawingIndex]
     const existingWeight = opened.weights.reduce((sum, weight, index) => (index === drawingIndex ? sum : sum + weight), 0)

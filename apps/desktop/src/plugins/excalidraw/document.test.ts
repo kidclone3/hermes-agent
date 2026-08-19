@@ -30,6 +30,7 @@ const identity: ExcalidrawDocumentIdentity = {
   profile: 'default',
   runtime: 'local'
 }
+
 const source = JSON.stringify({
   type: 'excalidraw',
   version: 2,
@@ -111,6 +112,7 @@ describe('Excalidraw documents', () => {
       elements: [],
       appState: { collaborators: {} }
     })
+
     readDesktopDrawingFileText.mockResolvedValue({
       path: identity.path,
       text,
@@ -155,6 +157,7 @@ describe('Excalidraw documents', () => {
     readDesktopDrawingFileText.mockResolvedValue(sourceRead())
     const controller = createDrawingController(await loadDrawing(identity))
     let resolveFirstWrite!: (value: { fingerprint: string; path: string }) => void
+
     const firstWrite = new Promise<{ fingerprint: string; path: string }>(resolve => {
       resolveFirstWrite = resolve
     })
@@ -291,6 +294,7 @@ describe('Excalidraw documents', () => {
     readDesktopDrawingFileText.mockResolvedValue(sourceRead())
     const controller = createDrawingController(await loadDrawing(identity))
     let resolveWrite!: (value: { fingerprint: string; path: string }) => void
+
     const write = new Promise<{ fingerprint: string; path: string }>(resolve => {
       resolveWrite = resolve
     })

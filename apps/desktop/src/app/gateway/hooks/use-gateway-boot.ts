@@ -231,6 +231,7 @@ export function useGatewayBoot({
         if (isActivePrimary()) {
           publish(conn)
         }
+
         sourceRuntime = desktopRuntimeIdentity(conn)
         sourceProfile = normalizeProfileKey(conn.profile ?? $activeGatewayProfile.get())
         // Re-mint the WS URL before reconnecting. OAuth tickets are single-use
@@ -648,6 +649,7 @@ export function useGatewayBoot({
         } catch (err) {
           console.warn('Failed to seed default workspace cwd pre-connect', err)
         }
+
         // Mint a fresh WS URL right before connecting. For OAuth gateways the
         // ticket is single-use with a short TTL, so the ticket baked into
         // conn.wsUrl is stale; resolveGatewayWsUrl() re-mints it rather than

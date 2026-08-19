@@ -156,6 +156,7 @@ describe('desktop filesystem facade', () => {
       profile: 'remote-docker',
       runtime: 'remote:ssh:remote-docker:owner-a'
     }
+
     $connection.set({
       mode: 'remote',
       profile: 'remote-docker',
@@ -218,6 +219,7 @@ describe('desktop filesystem facade', () => {
       profile: 'remote-docker',
       runtime: 'remote:ssh:remote-docker:owner-a'
     }
+
     $connection.set({
       mode: 'remote',
       profile: 'other-profile',

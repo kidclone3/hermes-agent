@@ -24,6 +24,7 @@ interface EditorInitialData {
   elements: readonly ExcalidrawElement[]
   files: BinaryFiles
 }
+
 function DrawingControls({ controller, state }: { controller: DrawingController; state: DrawingState }) {
   if (state.status === 'conflict') {
     return (
@@ -70,6 +71,7 @@ export function ExcalidrawPane({ identity }: ExcalidrawPaneProps) {
       if (!controller) {
         return
       }
+
       if (ignoreInitializationEcho.current) {
         ignoreInitializationEcho.current = false
 
@@ -91,6 +93,7 @@ export function ExcalidrawPane({ identity }: ExcalidrawPaneProps) {
         if (disposed) {
           return
         }
+
         activeController = createDrawingController(drawing)
         unregisterCloseBarrier = registerWindowCloseBarrier(() => activeController?.waitForSave() ?? true)
         const loadedState = activeController.getState()
@@ -135,6 +138,7 @@ export function ExcalidrawPane({ identity }: ExcalidrawPaneProps) {
 
     return controller.subscribe(origin => {
       const nextState = controller.getState()
+
       if (origin === 'external' || nextState.status === 'error') {
         setState(nextState)
       }

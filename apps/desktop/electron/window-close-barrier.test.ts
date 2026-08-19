@@ -41,6 +41,7 @@ function makeWindow(id = 1) {
 
   function emitClose() {
     let prevented = false
+
     for (const listener of listeners.get('close') ?? []) {
       listener({
         preventDefault: () => {
@@ -78,6 +79,7 @@ test('rearms app-close flushing after a downstream quit guard delays the retry',
   let flushes = 0
   let retries = 0
   let prevented = 0
+
   const barrier = createAppCloseBarrier({
     requestFlush: async () => {
       flushes += 1
@@ -88,6 +90,7 @@ test('rearms app-close flushing after a downstream quit guard delays the retry',
       retries += 1
     }
   })
+
   const event = {
     preventDefault: () => {
       prevented += 1
@@ -170,6 +173,7 @@ test('vetoes a close after the bounded renderer-response timeout', async () => {
   const fake = makeWindow()
   let timeout: (() => void) | undefined
   const failures: string[] = []
+
   const coordinator = createRendererCloseCoordinator({
     clearScheduled: () => undefined,
     onFailure: failure => failures.push(failure.reason),

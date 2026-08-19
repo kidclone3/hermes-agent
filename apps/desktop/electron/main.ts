@@ -330,7 +330,6 @@ import {
 import { fetchMarketplaceThemes, searchMarketplaceThemes } from './vscode-marketplace'
 import { createWakeIndicatorWindowController } from './wake-indicator-window'
 import { readWindowBelow } from './window-below'
-import { installWindowRendererLifecycle } from './window-renderer-lifecycle'
 import {
   createAppCloseBarrier,
   createRendererCloseCoordinator,
@@ -338,6 +337,7 @@ import {
   RENDERER_CLOSE_RESULT_CHANNEL,
   type RendererCloseWindow
 } from './window-close-barrier'
+import { installWindowRendererLifecycle } from './window-renderer-lifecycle'
 import { createWindowRevealController } from './window-reveal'
 import {
   bindGeometryPersistence,
@@ -10646,16 +10646,19 @@ function wireWindowReveal(win, { show, onRevealed }: { show?: () => void; onReve
 
   return controller
 }
+
 // BrowserWindow's `close` event is synchronous, but live renderer work (such
 // as a debounced drawing save) is not. Track only full app renderers: helper
 // windows never mount panes and deliberately do not participate.
 const rendererCloseWindows = new Set<RendererCloseWindow>()
 const rendererCloseDisposers = new WeakMap<RendererCloseWindow, () => void>()
+
 const rendererCloseCoordinator = createRendererCloseCoordinator({
   onFailure: ({ reason, window }) => {
     rememberLog(`[close-barrier] blocked close for renderer ${window.webContents.id}: ${reason}`)
   }
 })
+
 const rendererAppCloseBarrier = createAppCloseBarrier({
   onFailure: () => {
     rememberLog('[close-barrier] blocked app quit because renderer flush coordination failed')
@@ -10678,6 +10681,7 @@ function detachRendererCloseBarrier(win): void {
 function attachRendererCloseBarrier(win): void {
   const rendererWindow = win as RendererCloseWindow
   rendererCloseWindows.add(rendererWindow)
+
   const dispose = installWindowCloseBarrier(rendererWindow, {
     isTeardownPermitted: rendererAppCloseBarrier.isPermitted,
     onFailure: () => {
@@ -10685,6 +10689,7 @@ function attachRendererCloseBarrier(win): void {
     },
     requestFlush: () => rendererCloseCoordinator.request(rendererWindow)
   })
+
   rendererCloseDisposers.set(rendererWindow, dispose)
 
   win.once('closed', () => detachRendererCloseBarrier(win))
@@ -10752,6 +10757,7 @@ function spawnSecondaryWindow({ sessionId, watch }: { sessionId?: string; watch?
   if (IS_MAC) {
     win.setWindowButtonPosition?.(WINDOW_BUTTON_POSITION)
   }
+
   attachRendererCloseBarrier(win)
 
   wireWindowReveal(win)
@@ -10850,6 +10856,7 @@ function createInstanceWindow() {
   if (IS_MAC) {
     win.setWindowButtonPosition?.(WINDOW_BUTTON_POSITION)
   }
+
   attachRendererCloseBarrier(win)
 
   wireWindowReveal(win)
@@ -15292,8 +15299,10 @@ app.on('before-quit', event => {
   // exactly as it was.
   if (heldQuitForActiveWork(event)) {
     rendererAppCloseBarrier.rearm()
+
     return
   }
+
   // The active-work confirmation deliberately stays first. Once the user has
   // chosen to quit, every full renderer must settle its close-sensitive work
   // before any teardown below can destroy its panes.
