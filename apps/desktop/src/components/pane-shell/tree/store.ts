@@ -1149,7 +1149,7 @@ function enforceDockedPanes(
   for (const pane of registry.getArea('panes')) {
     const dock = dataOf(pane.id)?.dock
 
-    if (!dock?.enforce || dock.pos !== 'center' || !allPaneIds(next).includes(pane.id)) {
+    if (!dock || !('pane' in dock) || !dock.enforce || dock.pos !== 'center' || !allPaneIds(next).includes(pane.id)) {
       continue
     }
 
